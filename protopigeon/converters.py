@@ -1,8 +1,6 @@
 import datetime
 from protorpc import messages, message_types, util
-from google.appengine.ext import ndb
-from google.appengine.api import users
-from .types import DateMessage, TimeMessage, UserMessage, GeoPtMessage
+from .types import DateMessage, TimeMessage
 
 
 class Converter(object):
@@ -22,37 +20,37 @@ class Converter(object):
 class StringConverter(Converter):
     @staticmethod
     def to_field(Model, property, count):
-        return messages.StringField(count, repeated=property._repeated, required=property._required)
+        return messages.StringField(count, required=property._required)
 
 
 class BytesConverter(Converter):
     @staticmethod
     def to_field(Model, property, count):
-        return messages.BytesField(count, repeated=property._repeated)
+        return messages.BytesField(count)
 
 
 class BooleanConverter(Converter):
     @staticmethod
     def to_field(Model, property, count):
-        return messages.BooleanField(count, repeated=property._repeated)
+        return messages.BooleanField(count)
 
 
 class IntegerConverter(Converter):
     @staticmethod
     def to_field(Model, property, count):
-        return messages.IntegerField(count, repeated=property._repeated)
+        return messages.IntegerField(count)
 
 
 class FloatConverter(Converter):
     @staticmethod
     def to_field(Model, property, count):
-        return messages.FloatField(count, repeated=property._repeated)
+        return messages.FloatField(count)
 
 
 class DateTimeConverter(Converter):
     @staticmethod
     def to_field(Model, property, count):
-        return message_types.DateTimeField(count, repeated=property._repeated)
+        return message_types.DateTimeField(count)
 
 
 class DateConverter(Converter):
@@ -69,7 +67,7 @@ class DateConverter(Converter):
 
     @staticmethod
     def to_field(Model, property, count):
-        return messages.MessageField(DateMessage, count, repeated=property._repeated)
+        return messages.MessageField(DateMessage, count)
 
 
 class TimeConverter(Converter):
@@ -97,108 +95,25 @@ class TimeConverter(Converter):
 
     @staticmethod
     def to_field(Model, property, count):
-        return messages.MessageField(TimeMessage, count, repeated=property._repeated)
+        return messages.MessageField(TimeMessage, count)
 
-
-class UserConverter(Converter):
-    @staticmethod
-    def to_message(Mode, property, field, value):
-        return UserMessage(
-            email=value.email(),
-            user_id=value.user_id(),
-            nickname=value.nickname())
-
-    @staticmethod
-    def to_model(Message, property, field, value):
-        if isinstance(value, basestring):
-            return users.User(email=value)
-        elif isinstance(value, UserMessage) and value.email:
-            return users.User(email=value.email)
-
-    @staticmethod
-    def to_field(Model, property, count):
-        return messages.MessageField(UserMessage, count, repeated=property._repeated)
-
-
-class BlobKeyConverter(Converter):
-    @staticmethod
-    def to_message(Mode, property, field, value):
-        return str(value)
-
-    @staticmethod
-    def to_model(Message, property, field, value):
-        return ndb.BlobKey(value)
-
-    @staticmethod
-    def to_field(Model, property, count):
-        return messages.StringField(count, repeated=property._repeated)
-
-
-class KeyConverter(Converter):
-    @staticmethod
-    def to_message(Mode, property, field, value):
-        if value.id():
-            return value.urlsafe()
-
-    @staticmethod
-    def to_model(Message, property, field, value):
-        if isinstance(value, basestring):
-            return ndb.Key(urlsafe=value)
-
-    @staticmethod
-    def to_field(Model, property, count):
-        return messages.StringField(count, repeated=property._repeated)
-
-
-class GeoPtConverter(Converter):
-    @staticmethod
-    def to_message(Mode, property, field, value):
-        return GeoPtMessage(lat=value.lat, lon=value.lon)
-
-    @staticmethod
-    def to_model(Message, property, field, value):
-        if value:
-            return ndb.GeoPt(value.lat, value.lon)
-
-    @staticmethod
-    def to_field(Model, property, count):
-        return messages.MessageField(GeoPtMessage, count, repeated=property._repeated)
-
-
-class StructuredConverter(Converter):
-    @staticmethod
-    def to_message(Model, property, field, value):
-        from .translators import to_message
-        return to_message(value, field.type)
-
-    @staticmethod
-    def to_model(Message, property, field, value):
-        from .translators import to_entity
-        if value:
-            return to_entity(value, property._modelclass)
-
-    @staticmethod
-    def to_field(Model, property, count):
-        from .translators import model_message
-
-        message_class = model_message(property._modelclass)
-        return messages.MessageField(message_class, count, repeated=property._repeated)
 
 converters = {
-    'Key': KeyConverter,
-    'BooleanProperty': BooleanConverter,
-    'IntegerProperty': IntegerConverter,
-    'FloatProperty': FloatConverter,
-    'BlobProperty': BytesConverter,
-    'StringProperty': StringConverter,
-    'TextProperty': StringConverter,
-    'DateTimeProperty': DateTimeConverter,
-    'TimeProperty': TimeConverter,
-    'DateProperty': DateConverter,
-    'UserProperty': UserConverter,
-    'GeoPtProperty': GeoPtConverter,
-    'KeyProperty': KeyConverter,
-    'BlobKeyProperty': BlobKeyConverter,
-    'StructuredProperty': StructuredConverter,
-    'LocalStructuredProperty': StructuredConverter
+    'BigInteger': IntegerConverter,
+    'Boolean': BooleanConverter,
+    'Date': DateConverter,
+    'DateTime': DateTimeConverter,
+    'Enum': StringConverter,
+    'Float': FloatConverter,
+    'Integer': IntegerConverter,
+    'Interval': StringConverter,
+    'LargeBinary': BytesConverter,
+    'Numeric': IntegerConverter,
+    'PickleType': BytesConverter,
+    'SmallInteger': IntegerConverter,
+    'String': StringConverter,
+    'Text': StringConverter,
+    'Time': TimeConverter,
+    'Unicode': StringConverter,
+    'UnicodeText': StringConverter,
 }
