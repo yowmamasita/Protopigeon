@@ -45,7 +45,7 @@ def to_message(entity, message, converters=None, only=None, exclude=None):
 
         if converter:
             if value is not None:  # only try to convert if the value is meaningful, otherwise leave it as Falsy.
-                setattr(property[0], '_required', property[1])
+                setattr(property[0], '_required', not property[1])
                 value = converter.to_message(entity, property[0], message_field, value)
             values[field] = value
 
@@ -79,7 +79,7 @@ def to_entity(message, model, converters=None, only=None, exclude=None):
 
         if converter:
             if value is not None:
-                setattr(property[0], '_required', property[1])
+                setattr(property[0], '_required', not property[1])
                 value = converter.to_model(message, property[0], message_field, value)
 
             values[field] = value
@@ -113,7 +113,7 @@ def model_message(Model, only=None, exclude=None, converters=None):
         converter = converters.get(prop[0].__class__.__name__, None)
 
         if converter:
-            setattr(prop[0], '_required', prop[1])
+            setattr(prop[0], '_required', not prop[1])
             field_dict[name] = converter.to_field(Model, prop[0], count)
 
     return type(class_name, (messages.Message,), field_dict)
